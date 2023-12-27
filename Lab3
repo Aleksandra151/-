@@ -1,0 +1,87 @@
+package org.example;
+
+import com.github.javafaker.Faker;
+import io.restassured.RestAssured;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.response.Response;
+import org.apache.hc.core5.http.HttpStatus;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import java.net.URI;
+import java.util.Map;
+
+import static com.google.common.base.Predicates.equalTo;
+import static io.restassured.RestAssured.given;
+
+public class lab3 {
+    private static final String baseUrl="http://petstore.swagger.io/v2";
+    private static final String User="/user",
+    SER_USERNAME=User+"/{username}",
+    USER_LOGIN=User+"/{login)",
+    USER_LOGOUT=User+"/{logout}";
+        private String username;
+        private String firstName;
+
+    }
+
+@BeforeClass
+public void setup(){
+    RestAssured.baseURI=baseUrl;
+    RestAssured.defaultParser= Parser.JSON;
+    RestAssured.requestSpecification=new RequestSpecBuilder().setContentType(ContentType.JSON
+            .build();
+    RestAssured.responseSpecification=new ResponseSpecBuilder().build();
+}
+@Test
+public void verifyLoginAction() {
+    Map<String, ?> body = Map.of(
+             "username",  "SesOlexandra",
+             "password",  "122m-23-2"
+);
+    Response response = given().body(body).get(USER_LOGIN);
+    response.then().statusCode(HttpStatus.SC_OK);
+    RestAssured.requestSpecification.sessionId(response.jsonPath()
+            .get("message")
+            .toString()
+            .replaceAll(  "^0-9",  ""));
+
+}
+@Test
+public void verifyCreateAction() {
+    username = Faker.instance().name().username();
+    firstName = Faker.instance().harryPotter().character();
+    Map<String, ?> body = Map.of(
+             "username", username,
+             "firstName", firstName,
+             "LastName", Faker.instance().gameOfThrones().character(),
+             "email", Faker.instance().internet().emailAddress(),
+             "password", Faker.instance().internet().password(),
+             "phone", Faker.instance().phoneNumber().phoneNumber(),
+             "userStatus",  1
+
+);
+    given().body (body)
+            .post(User)
+            .then()
+            .statusCode(HttpStatus.SC_OK);
+
+}
+@Test(dependsOnMethods = "verifyCreateAction")
+public void verifyGetAction() {
+    given().pathParam(  "username", username)
+            .get(USER_USERNAME)
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .and()
+            .body("firstName", equalTo(firstName));
+
+}
+@Test(dependsOnMethods = "verifyGetAction")
+public void verifyDeleteAction() {
+    given().pathParam( "username", username)
+            .delete(USER_USERNAME)
+            .then()
+            .statusCode(HttpStatus.SC_OK);
+
+}
